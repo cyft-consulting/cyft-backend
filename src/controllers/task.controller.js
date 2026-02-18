@@ -103,3 +103,30 @@ export const rejectTask = (req, res) => {
 
   res.json({ message: "Task rejected" });
 };
+
+// Delete Task (Admin)
+export const deleteTask = (req, res) => {
+    const { taskId } = req.params;
+  
+    try {
+      // First delete submissions
+      db.prepare(`
+        DELETE FROM task_submissions WHERE taskId = ?
+      `).run(taskId);
+  
+      // Then delete the task
+      const result = db.prepare(`
+        DELETE FROM tasks WHERE id = ?
+      `).run(taskId);
+  
+      if (result.changes === 0) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+  
+      res.json({ message: "Task deleted successfully" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Error deleting task" });
+    }
+  };
+  

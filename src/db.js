@@ -54,7 +54,28 @@ db.prepare(`
       FOREIGN KEY (staffId) REFERENCES users(id)
     )
     `).run();
+
+db.prepare(`
+    CREATE TABLE IF NOT EXISTS announcements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        description TEXT,
+        createdBy INTEGER NOT NULL,
+        createdByRole TEXT NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+         )
+    `).run();
     
+      db.prepare(`
+      CREATE TABLE IF NOT EXISTS announcement_seen (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        announcementId INTEGER NOT NULL,
+        userId INTEGER NOT NULL,
+        seenAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (announcementId, userId)
+         )
+    `).run();
+      
 // Add missing columns if they don't exist
 const columns = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
 

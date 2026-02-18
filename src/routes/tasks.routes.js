@@ -5,7 +5,8 @@ import {
   getStaffTasks,
   submitTask,
   acceptTask,
-  rejectTask
+  rejectTask,
+  deleteTask
 } from "../controllers/task.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { adminOnly } from "../middleware/role.middleware.js";
@@ -17,6 +18,9 @@ router.post("/", authMiddleware, adminOnly, createTask);
 router.get("/all", authMiddleware, adminOnly, getAllTasks);
 router.put("/accept", authMiddleware, adminOnly, acceptTask);
 router.put("/reject", authMiddleware, adminOnly, rejectTask);
+
+// Admin delete task
+router.delete("/:taskId", authMiddleware, adminOnly, deleteTask);
 
 // Staff routes
 router.get("/my-tasks", authMiddleware, getStaffTasks);
