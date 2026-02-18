@@ -1,0 +1,12 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+
+# Optional: local database (if using SQLite)
+src/dev.db
