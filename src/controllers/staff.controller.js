@@ -2,7 +2,7 @@ import db from "../db.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
-import { sendTempPasswordEmail } from "../utils/mailer.js";
+import { sendTempPasswordEmail } from "../utils/sendTempPasswordEmail.js";
 
 // Get all staff
 export const getAllStaff = (req, res) => {
