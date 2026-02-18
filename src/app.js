@@ -7,7 +7,12 @@ import announcementRoutes from "./routes/announcement.routes.js";
 
 const app = express();
 
-app.use(cors({ origin: "http://localhost:5174" }));
+app.use(
+    cors({
+      origin: ["http://localhost:5174", "https://cyftconsulting.com"],
+      credentials: true, // if you need cookies/auth headers
+    })
+  );
 app.use(express.json());
 
 app.use("/auth", authRoutes);

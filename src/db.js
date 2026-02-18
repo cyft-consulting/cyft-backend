@@ -98,6 +98,14 @@ if (!columns.includes("dateCreated")) {
 if (!columns.includes("tempPassword")) {
     db.prepare("ALTER TABLE users ADD COLUMN tempPassword TEXT").run();
   }
+
+if (!columns.includes("resetToken")) {
+  db.prepare("ALTER TABLE users ADD COLUMN resetToken TEXT").run();
+}
+
+if (!columns.includes("resetTokenExpiry")) {
+  db.prepare("ALTER TABLE users ADD COLUMN resetTokenExpiry INTEGER").run();
+}
   
 // Seed admin if not exists
 const admin = db.prepare("SELECT * FROM users WHERE email = ?").get(process.env.ADMIN_EMAIL);
