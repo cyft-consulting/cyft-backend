@@ -26,26 +26,18 @@ export const createStaff = async (req, res) => {
       return res.status(400).json({ message: "Name, email, and department are required" });
     }
 
-    // Normalize email
     const normalizedEmail = email.trim().toLowerCase();
 
     const existing = db
-    .prepare(`
-      SELECT 1 FROM users 
-      WHERE email = ?
-      LIMIT 1
-    `)
-    .get(normalizedEmail);  
+      .prepare(`SELECT 1 FROM users WHERE email = ? LIMIT 1`)
+      .get(normalizedEmail);  
 
     if (existing) {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    // Generate temporary password
     const tempPassword = crypto.randomBytes(4).toString("hex");
     const hashedPassword = bcrypt.hashSync(tempPassword, 10);
-
-    // Use ISO string for consistent date storage
     const dateCreated = new Date().toISOString();
 
     // Insert staff into database
@@ -54,21 +46,23 @@ export const createStaff = async (req, res) => {
       VALUES (?, ?, ?, ?, 'STAFF', ?, ?, 1)
     `).run(uuidv4(), name, normalizedEmail, hashedPassword, department, dateCreated);
 
-    // Send temporary password email
-    try {
-      await sendTempPasswordEmail(normalizedEmail, tempPassword);
-      console.log(`Temporary password sent to ${normalizedEmail}`);
-    } catch (emailErr) {
-      console.error("Failed to send email:", emailErr);
-      return res.status(500).json({ message: "Staff created but failed to send email" });
-    }
+    // Respond immediately
+    res.status(201).json({ message: "Staff created successfully" });
 
-    res.status(201).json({ message: "Staff created and email sent successfully" });
+    // Send email asynchronously (does NOT block response)
+    sendTempPasswordEmail(normalizedEmail, tempPassword)
+      .then(() => console.log(`Temporary password sent to ${normalizedEmail}`))
+      .catch((emailErr) => {
+        console.error("Failed to send email:", emailErr);
+        // Optionally, log to a database table for retry
+      });
+
   } catch (err) {
     console.error("Error creating staff:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 // Delete staff
 export const deleteStaff = (req, res) => {
