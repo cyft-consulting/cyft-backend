@@ -42,9 +42,9 @@ export const createStaff = async (req, res) => {
 
     // Insert staff into database
     db.prepare(`
-      INSERT INTO users (id, name, email, password, role, department, dateCreated, isActive)
+      INSERT INTO users (id, name, email, password, tempPassword, role, department, dateCreated, isActive)
       VALUES (?, ?, ?, ?, 'STAFF', ?, ?, 1)
-    `).run(uuidv4(), name, normalizedEmail, hashedPassword, department, dateCreated);
+    `).run(uuidv4(), name, normalizedEmail, hashedPassword, tempPassword, department, dateCreated);
 
     // Respond immediately
     res.status(201).json({ message: "Staff created successfully" });

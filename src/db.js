@@ -65,7 +65,7 @@ db.prepare(`
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
          )
     `).run();
-    
+
       db.prepare(`
       CREATE TABLE IF NOT EXISTS announcement_seen (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -94,6 +94,11 @@ if (!columns.includes("dateCreated")) {
   db.prepare("ALTER TABLE users ADD COLUMN dateCreated TEXT").run();
 }
 
+// Add 'tempPassword' column for storing temporary passwords
+if (!columns.includes("tempPassword")) {
+    db.prepare("ALTER TABLE users ADD COLUMN tempPassword TEXT").run();
+  }
+  
 // Seed admin if not exists
 const admin = db.prepare("SELECT * FROM users WHERE email = ?").get(process.env.ADMIN_EMAIL);
 
