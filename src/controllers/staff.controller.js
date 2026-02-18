@@ -8,7 +8,7 @@ import { sendTempPasswordEmail } from "../utils/sendTempPasswordEmail.js";
 export const getAllStaff = (req, res) => {
   const staff = db
     .prepare(`
-      SELECT id, name, email, role, department, dateCreated, isActive 
+      SELECT id, name, email, role, department, dateCreated, isActive, tempPassword
       FROM users 
       WHERE role = 'STAFF'
     `)
