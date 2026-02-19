@@ -84,15 +84,16 @@ export const submitTask = async (req, res) => {
     const staffId = req.user.id;
     const submittedAt = new Date().toISOString();
 
-    if (!fileUrl) return res.status(400).json({ message: "No file URL provided" });
+    // Prepare files as JSON array only if fileUrl exists
+    const files = fileUrl ? JSON.stringify([fileUrl]) : null;
 
     await pool.query(
       `INSERT INTO task_submissions (id, taskId, staffId, text, files, submittedAt, reviewStatus)
        VALUES ($1, $2, $3, $4, $5, $6, 'PENDING')`,
-      [uuidv4(), taskId, staffId, text, JSON.stringify([fileUrl]), submittedAt]
+      [uuidv4(), taskId, staffId, text, files, submittedAt]
     );
 
-    res.json({ message: "Task submitted successfully", fileUrl });
+    res.json({ message: "Task submitted successfully", fileUrl: fileUrl || null });
   } catch (err) {
     console.error("Error submitting task:", err);
     res.status(400).json({ message: "Error submitting task" });
