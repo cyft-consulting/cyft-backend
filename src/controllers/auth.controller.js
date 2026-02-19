@@ -20,6 +20,7 @@ export const login = (req, res) => {
 
 // Request password reset
 export const requestPasswordReset = async (req, res) => {
+  console.log("🔐 Password reset requested:", req.body.email);
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ message: "Email is required" });
@@ -41,12 +42,16 @@ export const requestPasswordReset = async (req, res) => {
       WHERE id = ?
     `).run(hashedToken, expiry, user.id);
 
+    console.log("📨 Sending reset email to:", user.email);
+
     const resetLink =
       `https://cyftconsulting.com/staff/reset-password?token=${rawToken}&email=${user.email}`;
 
     await sendPasswordResetEmail(user.email, resetLink);
 
     res.json({ message: "If the email exists, a reset link has been sent" });
+    console.log("✅ Reset email sent");
+
 
   } catch (err) {
     console.error(err);
