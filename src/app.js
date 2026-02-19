@@ -19,5 +19,6 @@ app.use("/auth", authRoutes);
 app.use("/staff", staffRoutes);
 app.use("/tasks", tasksRoute);
 app.use("/announcements", announcementRoutes);
+app.use("/uploads", express.static("uploads"));
 
 export default app;

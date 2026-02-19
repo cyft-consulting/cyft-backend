@@ -63,15 +63,17 @@ export const getStaffTasks = (req, res) => {
 
 // Submit a task (Staff)
 export const submitTask = (req, res) => {
-  const { taskId, text, files } = req.body;
+  const { taskId, text } = req.body;
   const staffId = req.user.id;
   const submittedAt = new Date().toISOString();
+    // req.files is an array of uploaded files
+    const fileNames = req.files.map(f => f.filename);
 
   try {
     db.prepare(`
       INSERT INTO task_submissions (id, taskId, staffId, text, files, submittedAt, reviewStatus)
       VALUES (?, ?, ?, ?, ?, ?, 'PENDING')
-    `).run(uuidv4(), taskId, staffId, text, JSON.stringify(files || []), submittedAt);
+    `).run(uuidv4(), taskId, staffId, text, JSON.stringify(fileNames), submittedAt);
 
     res.json({ message: "Task submitted successfully" });
   } catch (err) {

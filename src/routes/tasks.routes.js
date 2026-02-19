@@ -10,6 +10,7 @@ import {
 } from "../controllers/task.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { adminOnly } from "../middleware/role.middleware.js";
+import { upload } from "../middlewares/upload.js";
 
 const router = express.Router();
 
@@ -25,5 +26,8 @@ router.delete("/:taskId", authMiddleware, adminOnly, deleteTask);
 // Staff routes
 router.get("/my-tasks", authMiddleware, getStaffTasks);
 router.post("/submit", authMiddleware, submitTask);
+
+// 'files' is the field name you’ll send from frontend
+router.post("/submit-task", upload.array("files"), submitTask);
 
 export default router;
