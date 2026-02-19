@@ -1,6 +1,6 @@
 import SibApiV3Sdk from "sib-api-v3-sdk";
 
-export const sendTempPasswordEmail = async (recipient, tempPassword) => {
+export const sendPasswordResetEmail = async (recipient, resetLink) => {
   const client = SibApiV3Sdk.ApiClient.instance;
   client.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
 
@@ -8,11 +8,11 @@ export const sendTempPasswordEmail = async (recipient, tempPassword) => {
 
   const email = {
     sender: {
-      email: process.env.BREVO_EMAIL, // must be verified in Brevo
+      email: process.env.BREVO_EMAIL,
       name: "Cyft Consulting",
     },
     to: [{ email: recipient }],
-    subject: "Welcome to Cyft 👋 Your temporary password",
+    subject: "Reset your Cyft password",
     htmlContent: `
       <div style="background:#f6f6f6;padding:24px;font-family:Arial,Helvetica,sans-serif;">
         <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.08);">
@@ -20,7 +20,7 @@ export const sendTempPasswordEmail = async (recipient, tempPassword) => {
           <!-- Header -->
           <div style="background:#DE6328;padding:20px;text-align:center;">
             <h1 style="color:#ffffff;margin:0;font-size:22px;">
-              Welcome to Cyft
+              Password Reset
             </h1>
           </div>
 
@@ -29,31 +29,33 @@ export const sendTempPasswordEmail = async (recipient, tempPassword) => {
             <p style="font-size:15px;">Hello 👋</p>
 
             <p style="font-size:15px;line-height:1.6;">
-              Your account has been created successfully.  
-              Below is your <strong>temporary password</strong>.
+              You requested to reset your Cyft account password.  
+              Click the button below to continue.
             </p>
 
-            <!-- Password Box -->
-            <div style="
-              margin:20px 0;
-              padding:16px;
-              background:#F9F1EC;
-              border-radius:8px;
-              text-align:center;
-              font-size:18px;
-              font-weight:600;
-              letter-spacing:1px;
-              color:#DE6328;
-            ">
-              ${tempPassword}
+            <!-- CTA Button -->
+            <div style="text-align:center;margin:24px 0;">
+              <a href="${resetLink}"
+                 style="
+                   display:inline-block;
+                   padding:14px 22px;
+                   background:#DE6328;
+                   color:#ffffff;
+                   text-decoration:none;
+                   border-radius:8px;
+                   font-weight:600;
+                   font-size:14px;
+                 ">
+                Reset Password
+              </a>
             </div>
 
             <p style="font-size:14px;line-height:1.6;">
-              Please log in using this password and <strong>change it immediately</strong> for security reasons.
+              This link will expire in <strong>1 hour</strong> for security reasons.
             </p>
 
             <p style="font-size:14px;color:#666666;">
-              If you did not expect this email, you can safely ignore it.
+              If you did not request a password reset, you can safely ignore this email.
             </p>
 
             <hr style="border:none;border-top:1px solid #eeeeee;margin:24px 0;" />
@@ -68,12 +70,14 @@ export const sendTempPasswordEmail = async (recipient, tempPassword) => {
     textContent: `
 Hello 👋
 
-Welcome to Cyft.
+You requested to reset your Cyft password.
 
-Your temporary password is:
-${tempPassword}
+Use the link below to continue:
+${resetLink}
 
-Please log in and change it immediately.
+This link expires in 1 hour.
+
+If you didn’t request this, you can ignore this email.
 
 © Cyft Consulting
     `,
@@ -81,7 +85,7 @@ Please log in and change it immediately.
 
   try {
     await api.sendTransacEmail(email);
-    console.log(`Email sent to ${recipient}`);
+    console.log(`Password reset email sent to ${recipient}`);
   } catch (err) {
     console.error("Brevo send failed:", err?.response?.text || err);
   }

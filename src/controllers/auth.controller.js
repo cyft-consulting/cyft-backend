@@ -1,7 +1,8 @@
 import db from "../db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { sendTempPasswordEmail } from "../utils/sendTempPasswordEmail.js";
+import { sendPasswordResetEmail } from "../utils/sendPasswordResetEmail.js";
+import crypto from "crypto";
 
 export const login = (req, res) => {
   const { email, password } = req.body;
@@ -16,26 +17,36 @@ export const login = (req, res) => {
 
   res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
 };
+
 // Request password reset
 export const requestPasswordReset = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ message: "Email is required" });
 
-    const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email.toLowerCase());
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = db.prepare("SELECT * FROM users WHERE email = ?")
+      .get(email.toLowerCase());
 
-    const resetToken = crypto.randomBytes(20).toString("hex");
-    const resetTokenExpiry = Date.now() + 3600 * 1000; // 1 hour expiry
+    if (!user) {
+      return res.json({ message: "If the email exists, a reset link has been sent" });
+    }
 
-    db.prepare("UPDATE users SET resetToken = ?, resetTokenExpiry = ? WHERE id = ?")
-      .run(resetToken, resetTokenExpiry, user.id);
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const expiry = Date.now() + 60 * 60 * 1000;
 
-    const resetLink = `https://cyftconsulting.com/reset-password?token=${resetToken}&email=${user.email}`;
+    db.prepare(`
+      UPDATE users
+      SET resetToken = ?, resetTokenExpiry = ?
+      WHERE id = ?
+    `).run(hashedToken, expiry, user.id);
 
-    await sendTempPasswordEmail(user.email, `Click to reset your password:\n${resetLink}`);
+    const resetLink =
+      `https://cyftconsulting.com/staff/reset-password?token=${rawToken}&email=${user.email}`;
 
-    res.json({ message: "Password reset link sent to your email" });
+    await sendPasswordResetEmail(user.email, resetLink);
+
+    res.json({ message: "If the email exists, a reset link has been sent" });
 
   } catch (err) {
     console.error(err);
@@ -43,17 +54,28 @@ export const requestPasswordReset = async (req, res) => {
   }
 };
 
+
 // Reset password
 export const resetPassword = async (req, res) => {
   try {
     const { email, token, newPassword } = req.body;
-    if (!email || !token || !newPassword)
+    if (!email || !token || !newPassword) {
       return res.status(400).json({ message: "All fields are required" });
+    }
 
-    const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email.toLowerCase());
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
 
-    if (!user.resetToken || user.resetToken !== token || Date.now() > user.resetTokenExpiry) {
+    const user = db.prepare(`
+      SELECT * FROM users
+      WHERE email = ?
+        AND resetToken = ?
+        AND resetTokenExpiry > ?
+    `).get(email.toLowerCase(), hashedToken, Date.now());
+
+    if (!user) {
       return res.status(400).json({ message: "Invalid or expired token" });
     }
 
@@ -65,11 +87,12 @@ export const resetPassword = async (req, res) => {
       WHERE id = ?
     `).run(hashedPassword, user.id);
 
-    res.json({ message: "Password reset successfully" });
+    res.json({ message: "Password reset successful" });
 
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
