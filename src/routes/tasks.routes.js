@@ -10,7 +10,6 @@ import {
 } from "../controllers/task.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { adminOnly } from "../middleware/role.middleware.js";
-import { upload } from "../middleware/upload.js";
 
 const router = express.Router();
 
@@ -26,12 +25,5 @@ router.delete("/:taskId", authMiddleware, adminOnly, deleteTask);
 // Staff routes
 router.get("/my-tasks", authMiddleware, getStaffTasks);
 router.post("/submit", authMiddleware, submitTask);
-
-router.post(
-  "/submit-task",
-  authMiddleware,
-  upload.single("file"), // "file" is the field name from frontend
-  submitTask
-);
 
 export default router;

@@ -63,21 +63,28 @@ export const getStaffTasks = (req, res) => {
 
 // Submit a task (Staff)
 export const submitTask = (req, res) => {
-  const { taskId, text } = req.body;
-  const staffId = req.user.id;
-  const submittedAt = new Date().toISOString();
-
-    // req.file contains the uploaded file
-    const fileName = req.file ? req.file.filename : null;
-
   try {
+    const { taskId, text, fileUrl } = req.body; // <-- include fileUrl
+    const staffId = req.user.id;
+    const submittedAt = new Date().toISOString();
+
+    if (!fileUrl) return res.status(400).json({ message: "No file URL provided" });
+
     db.prepare(`
       INSERT INTO task_submissions (id, taskId, staffId, text, files, submittedAt, reviewStatus)
       VALUES (?, ?, ?, ?, ?, ?, 'PENDING')
-    `).run(uuidv4(), taskId, staffId, text, JSON.stringify(fileName ? [fileName] : []), submittedAt);
+    `).run(
+      uuidv4(),
+      taskId,
+      staffId,
+      text,
+      JSON.stringify([fileUrl]), // store as array
+      submittedAt
+    );
 
-    res.json({ message: "Task submitted successfully" });
+    res.json({ message: "Task submitted successfully", fileUrl });
   } catch (err) {
+    console.error(err);
     res.status(400).json({ message: "Error submitting task" });
   }
 };
