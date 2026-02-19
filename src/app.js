@@ -9,7 +9,7 @@ const app = express();
 
 app.use(
     cors({
-      origin: ["http://localhost:5174", "https://cyftconsulting.com"],
+      origin: ["http://localhost:5174", "http://localhost:5175", "https://cyftconsulting.com"],
       credentials: true, // if you need cookies/auth headers
     })
   );
