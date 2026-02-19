@@ -1,34 +1,38 @@
-import nodemailer from "nodemailer";
+import SibApiV3Sdk from "sib-api-v3-sdk";
 
 export const sendTempPasswordEmail = async (recipient, tempPassword) => {
-  const transporter = nodemailer.createTransport({
-    host: "smtp.zoho.com",
-    port: 465, // SSL
-    secure: true, // true for 465, false for 587
-    auth: {
-      user: process.env.ZOHO_EMAIL, // info@cyftconsulting.com
-      pass: process.env.ZOHO_PASSWORD, // App password if 2FA enabled
-    },
+  const defaultClient = SibApiV3Sdk.ApiClient.instance;
+
+  // Configure API key
+  const apiKey = defaultClient.authentications["api-key"];
+  apiKey.apiKey = process.env.BREVO_API_KEY;
+
+  const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
+
+  const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail({
+    sender: { email: process.env.BREVO_EMAIL, name: "Cyft Consulting" },
+    to: [{ email: recipient, name: recipient }],
+    subject: "Welcome to Cyft",
+    textContent: `Hello 👋\n\nYour temporary password is:\n\n${tempPassword}\n\nPlease log in and change it.`,
   });
 
   try {
-    await transporter.sendMail({
-      from: `"Cyft Consulting" <${process.env.ZOHO_EMAIL}>`,
-      to: recipient,
-      subject: "Welcome to Cyft",
-      text: `Hello 👋\n\nYour temporary password is:\n\n${tempPassword}\n\nPlease log in and change it.`,
-    });
-
+    await tranEmailApi.sendTransacEmail(sendSmtpEmail);
     console.log(`Email sent to ${recipient}`);
   } catch (err) {
-    console.error("Failed to send email via Zoho:", err.message || err);
+    console.error("Failed to send email via Brevo:", err);
 
-    // Optional fallback to admin
-    await transporter.sendMail({
-      from: `"Cyft Consulting" <${process.env.ZOHO_EMAIL}>`,
-      to: "info@cyftconsulting.com",
-      subject: `Failed to send password to ${recipient}`,
-      text: `Could not send temporary password to ${recipient}.\nPassword: ${tempPassword}`,
-    });
+    // fallback to admin
+    try {
+      const fallbackEmail = new SibApiV3Sdk.SendSmtpEmail({
+        sender: { email: process.env.BREVO_EMAIL, name: "Cyft Consulting" },
+        to: [{ email: "info@cyftconsulting.com", name: "Admin" }],
+        subject: `Failed to send password to ${recipient}`,
+        textContent: `Could not send temporary password to ${recipient}.\nPassword: ${tempPassword}`,
+      });
+      await tranEmailApi.sendTransacEmail(fallbackEmail);
+    } catch (fallbackErr) {
+      console.error("Failed to send fallback email:", fallbackErr);
+    }
   }
 };
