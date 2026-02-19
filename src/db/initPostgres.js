@@ -1,6 +1,9 @@
 import { pool } from "./postgres.js";
+import bcrypt from "bcrypt";
+import { v4 as uuidv4 } from "uuid";
 
 export const initPostgres = async () => {
+  // 1️⃣ Create tables
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id UUID PRIMARY KEY,
@@ -65,4 +68,19 @@ export const initPostgres = async () => {
   `);
 
   console.log("✅ PostgreSQL tables ready");
+
+  // 2️⃣ Seed admin if not exists
+  const admin = await pool.query(
+    `SELECT * FROM users WHERE email=$1`,
+    [process.env.ADMIN_EMAIL]
+  );
+
+  if (admin.rowCount === 0) {
+    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+    await pool.query(
+      `INSERT INTO users (id, email, password, role, isActive) VALUES ($1, $2, $3, 'ADMIN', true)`,
+      [uuidv4(), process.env.ADMIN_EMAIL, hashedPassword]
+    );
+    console.log("✅ Admin created successfully!");
+  }
 };
