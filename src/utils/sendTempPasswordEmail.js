@@ -1,25 +1,34 @@
-import postmark from "postmark";
+import nodemailer from "nodemailer";
 
 export const sendTempPasswordEmail = async (recipient, tempPassword) => {
-  const client = new postmark.ServerClient(process.env.POSTMARK_API_KEY);
+  const transporter = nodemailer.createTransport({
+    host: "smtp.zoho.com",
+    port: 465, // SSL
+    secure: true, // true for 465, false for 587
+    auth: {
+      user: process.env.ZOHO_EMAIL, // info@cyftconsulting.com
+      pass: process.env.ZOHO_PASSWORD, // App password if 2FA enabled
+    },
+  });
 
   try {
-    await client.sendEmail({
-      From: process.env.POSTMARK_SENDER_EMAIL,
-      To: recipient,
-      Subject: "Welcome to Cyft",
-      TextBody: `Hello 👋\n\nYour temporary password is:\n\n${tempPassword}\n\nPlease log in and change it.`,
+    await transporter.sendMail({
+      from: `"Cyft Consulting" <${process.env.ZOHO_EMAIL}>`,
+      to: recipient,
+      subject: "Welcome to Cyft",
+      text: `Hello 👋\n\nYour temporary password is:\n\n${tempPassword}\n\nPlease log in and change it.`,
     });
 
     console.log(`Email sent to ${recipient}`);
   } catch (err) {
-    console.error("Failed to send email via Postmark:", err.message || err);
-    // Optional: send fallback to admin
-    await client.sendEmail({
-      From: process.env.POSTMARK_SENDER_EMAIL,
-      To: "info@cyftconsulting.com",
-      Subject: `Failed to send password to ${recipient}`,
-      TextBody: `Could not send temporary password to ${recipient}.\nPassword: ${tempPassword}`,
+    console.error("Failed to send email via Zoho:", err.message || err);
+
+    // Optional fallback to admin
+    await transporter.sendMail({
+      from: `"Cyft Consulting" <${process.env.ZOHO_EMAIL}>`,
+      to: "info@cyftconsulting.com",
+      subject: `Failed to send password to ${recipient}`,
+      text: `Could not send temporary password to ${recipient}.\nPassword: ${tempPassword}`,
     });
   }
 };
