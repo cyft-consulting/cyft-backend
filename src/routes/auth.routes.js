@@ -4,7 +4,7 @@ import { login, requestPasswordReset, resetPassword  } from "../controllers/auth
 const router = express.Router();
 router.post("/login", login);
 // POST /api/auth/forgot-password
-router.post("/forgot-password", requestPasswordReset);
+router.post("/request-password-reset", requestPasswordReset);
 
 // POST /api/auth/reset-password
 router.post("/reset-password", resetPassword);
