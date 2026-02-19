@@ -10,7 +10,7 @@ import {
 } from "../controllers/task.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { adminOnly } from "../middleware/role.middleware.js";
-import { upload } from "../middlewares/upload.js";
+import { upload } from "../middleware/upload.js";
 
 const router = express.Router();
 
