@@ -27,11 +27,10 @@ router.delete("/:taskId", authMiddleware, adminOnly, deleteTask);
 router.get("/my-tasks", authMiddleware, getStaffTasks);
 router.post("/submit", authMiddleware, submitTask);
 
-// 'files' is the field name you’ll send from frontend
 router.post(
   "/submit-task",
-  authMiddleware,           // staff must be logged in
-  upload.array("files"),    // handle file uploads
+  authMiddleware,
+  upload.single("file"), // "file" is the field name from frontend
   submitTask
 );
 
